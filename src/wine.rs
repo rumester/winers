@@ -74,6 +74,34 @@ impl Wine {
         cmd
     }
 
+    pub fn reg_query(&self, key: &str, value: &str) -> Result<Option<String>, String> {
+        let output = self.cmd()
+            .args(["reg", "query", key, "/v", value])
+            .output()
+            .map_err(|e| format!("Failed to execute wine: {}", e))?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("Failed to query registry key: {}", stderr));
+        } else {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            
+            for line in stdout.lines() {
+                if line.contains(value) {
+                    let tokens: Vec<&str> = line.split_whitespace().collect();
+                    if tokens.len() >= 3 {
+                        return Ok(Some(tokens[2].to_string()));
+                    } else {
+                        return Err("Unexpected format in output.".to_string());
+                    }
+                }
+            }
+            
+            Ok(None)
+        }
+
+    }
+
     pub fn reg_add(&self, key: &str, value: &str, reg_type: &str, data: &str) -> Result<(), String> {
         let output = self.cmd()
             .args(["reg", "add", key, "/v", value, "/t", reg_type, "/d", data, "/f"])
