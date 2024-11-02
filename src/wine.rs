@@ -96,10 +96,9 @@ impl Wine {
                     }
                 }
             }
-            
-            Ok(None)
         }
 
+        Ok(None)
     }
 
     pub fn reg_add(&self, key: &str, value: &str, reg_type: &str, data: &str) -> Result<(), String> {
